@@ -7,7 +7,7 @@ Geoaccess::Application.routes.draw do
 
   match '/about',   :to => "pages#about"
   
-    match "/directions(/:startpoint_id/:endpoint_id)" => 'routes#create', :as => :get_directions
+    match "/routes(/:route[:startpoint_id]/:route[endpoint_id])" => 'routes#create', :as => :get_directions
   
 
   root :to => 'routes#new'

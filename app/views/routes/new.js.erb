@@ -1,4 +1,5 @@
 	$('#directions').html('<%= escape_javascript(render("directions")) %>');
+	$("#directions").attr("tabIndex",-1).focus()
 	
 	$('#route_clear').click(function(){
 		$('#directions').html('');

@@ -34,6 +34,7 @@ class Route < ActiveRecord::Base
     RestClient.post 'http://goroo.com/goroo/showTripPlanResults.htm', 
       {:params => {"calendarOpen" => "false", 
           "calendarClick" => "false", 
+          "revising" => "true",
           "advanced" => "",
           "newTrip" => "yes", 
           "newRequest" => "true", 
