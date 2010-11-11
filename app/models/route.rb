@@ -31,18 +31,32 @@ class Route < ActiveRecord::Base
   end
   
   def goroo_results
-    RestClient.post 'http://goroo.com/goroo/showTripPlanResults.htm', 
-      {:params => {"calendarOpen" => "false", 
+    RestClient.post 'http://goroo.com/goroo/getEFATrips.htm', 
+      {:params => {"language" => "en",
+"sessionID" => "CCGWeb01164611735",
+"requestID" => "1",
+"coordListOutputFormat" => "STRING",
+"command" => "formatToXSLT",
+"tripSelection" => "on",
+"coordOutputFormat" => "CCGV",
+"itdLPxx_mdvMap" => "MDVMapEFATrips",
+"itdLPxx_mdvMapName" => "mdvMap",
+"showItdPathCoordinates" => "1",
+"filterEpsilon" => "",
+"itdLPxx_hideNotes" => "1",
+"tripSelector1" => "on",
+"calendarOpen" => "false", 
           "calendarClick" => "false", 
           "revising" => "true",
           "advanced" => "",
           "newTrip" => "yes", 
           "newRequest" => "true", 
-          "trip" => "0",
+          "trip" => "1",
           "dummy" => "", 
           "origAddress" => startpoint.location,
           "destAddress" => endpoint.location,
           "arriveLeave" => "dep",
+          "tripResponse" => "TRIP_VALID",
 
           "travelDate" => "11/17/10",
           "hour"  => "3",
@@ -59,6 +73,62 @@ class Route < ActiveRecord::Base
           }
   end
   
+  def agent
+    agent = Mechanize.new { |a|
+      a.user_agent_alias = 'Mac Safari'
+      a.log = Logger.new('./site.log')
+      a.request_headers = {
+        "Referer" => "http://goroo.com/goroo/showTripPlanResults.htm",
+        "Origin" => "http://goroo.com/",
+        "X-Requested-With" => "XMLHttpRequest"
+      }
+    }
+
+  end
+  
+  
+   def goroo_results
+    agent.post 'http://goroo.com/goroo/getEFATrips.htm', 
+      {"language" => "en",
+"sessionID" => "CCGWeb01164611735",
+"requestID" => "1",
+"coordListOutputFormat" => "STRING",
+"command" => "formatToXSLT",
+"tripSelection" => "on",
+"coordOutputFormat" => "CCGV",
+"itdLPxx_mdvMap" => "MDVMapEFATrips",
+"itdLPxx_mdvMapName" => "mdvMap",
+"showItdPathCoordinates" => "1",
+"filterEpsilon" => "",
+"itdLPxx_hideNotes" => "1",
+"tripSelector1" => "on",
+"calendarOpen" => "false", 
+          "calendarClick" => "false", 
+          "revising" => "true",
+          "advanced" => "",
+          "newTrip" => "yes", 
+          "newRequest" => "true", 
+          "trip" => "1",
+          "dummy" => "", 
+          "origAddress" => startpoint.location,
+          "destAddress" => endpoint.location,
+          "arriveLeave" => "dep",
+          "tripResponse" => "TRIP_VALID",
+
+          "travelDate" => "11/17/10",
+          "hour"  => "3",
+          "minute" => "00",
+          "ampm" => "pm",
+
+          "train" => "true", 
+          "bus"  => "true", 
+          "tripPreference"  => "LEASTTIME",
+
+          "walkPreference"  => "0.50",
+          "accessibleRequired"  => "true",
+          "takeMeThere" => "Get Public transit directions"
+          }
+  end
   
 
 private 

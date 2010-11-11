@@ -14,6 +14,7 @@ gem 'rails-geocoder'
 gem 'geokit-rails'
 gem 'google_directions', '0.1.5', :git => 'git://github.com/dmclark/google-directions-ruby.git'
 gem 'rest-client'
+gem 'mechanize' 
 # Use unicorn as the web server
 # gem 'unicorn'
 
