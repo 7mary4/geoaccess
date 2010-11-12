@@ -1,5 +1,5 @@
 class Route < ActiveRecord::Base
-  attr_accessor :startpaint_id, :endpaint_id, :directions, :rta_directions
+  attr_accessor :startpaint_id, :endpaint_id, :directions, :goroo_results
   
   belongs_to :startpoint, :class_name => "Venue", :foreign_key => "startpoint_id"
   belongs_to :endpoint, :class_name => "Venue", :foreign_key => "endpoint_id"
@@ -17,9 +17,6 @@ class Route < ActiveRecord::Base
         end 
   end
   
-  def rta_directions
-     Nokogiri::HTML(goroo_results).css('#tripPlan').text.html_safe
-  end
   
   def distance
     Nokogiri::XML(parsed_xml).xpath('/DirectionsResponse/route/leg/distance/text').text.html_safe
@@ -30,105 +27,26 @@ class Route < ActiveRecord::Base
     GoogleDirections.new(startpoint.location, endpoint.location).xml
   end
   
-  def goroo_results
-    RestClient.post 'http://goroo.com/goroo/getEFATrips.htm', 
-      {:params => {"language" => "en",
-"sessionID" => "CCGWeb01164611735",
-"requestID" => "1",
-"coordListOutputFormat" => "STRING",
-"command" => "formatToXSLT",
-"tripSelection" => "on",
-"coordOutputFormat" => "CCGV",
-"itdLPxx_mdvMap" => "MDVMapEFATrips",
-"itdLPxx_mdvMapName" => "mdvMap",
-"showItdPathCoordinates" => "1",
-"filterEpsilon" => "",
-"itdLPxx_hideNotes" => "1",
-"tripSelector1" => "on",
-"calendarOpen" => "false", 
-          "calendarClick" => "false", 
-          "revising" => "true",
-          "advanced" => "",
-          "newTrip" => "yes", 
-          "newRequest" => "true", 
-          "trip" => "1",
-          "dummy" => "", 
-          "origAddress" => startpoint.location,
-          "destAddress" => endpoint.location,
-          "arriveLeave" => "dep",
-          "tripResponse" => "TRIP_VALID",
-
-          "travelDate" => "11/17/10",
-          "hour"  => "3",
-          "minute" => "00",
-          "ampm" => "pm",
-
-          "train" => "true", 
-          "bus"  => "true", 
-          "tripPreference"  => "LEASTTIME",
-
-          "walkPreference"  => "0.50",
-          "accessibleRequired"  => "true",
-          "takeMeThere" => "Get Public transit directions" }
-          }
-  end
-  
   def agent
-    agent = Mechanize.new { |a|
-      a.user_agent_alias = 'Mac Safari'
-      a.log = Logger.new('./site.log')
-      a.request_headers = {
-        "Referer" => "http://goroo.com/goroo/showTripPlanResults.htm",
-        "Origin" => "http://goroo.com/",
-        "X-Requested-With" => "XMLHttpRequest"
-      }
-    }
-
+    agent = Mechanize.new 
   end
   
-  
-   def goroo_results
-    agent.post 'http://goroo.com/goroo/getEFATrips.htm', 
-      {"language" => "en",
-"sessionID" => "CCGWeb01164611735",
-"requestID" => "1",
-"coordListOutputFormat" => "STRING",
-"command" => "formatToXSLT",
-"tripSelection" => "on",
-"coordOutputFormat" => "CCGV",
-"itdLPxx_mdvMap" => "MDVMapEFATrips",
-"itdLPxx_mdvMapName" => "mdvMap",
-"showItdPathCoordinates" => "1",
-"filterEpsilon" => "",
-"itdLPxx_hideNotes" => "1",
-"tripSelector1" => "on",
-"calendarOpen" => "false", 
-          "calendarClick" => "false", 
-          "revising" => "true",
-          "advanced" => "",
-          "newTrip" => "yes", 
-          "newRequest" => "true", 
-          "trip" => "1",
-          "dummy" => "", 
-          "origAddress" => startpoint.location,
-          "destAddress" => endpoint.location,
-          "arriveLeave" => "dep",
-          "tripResponse" => "TRIP_VALID",
-
-          "travelDate" => "11/17/10",
-          "hour"  => "3",
-          "minute" => "00",
-          "ampm" => "pm",
-
-          "train" => "true", 
-          "bus"  => "true", 
-          "tripPreference"  => "LEASTTIME",
-
-          "walkPreference"  => "0.50",
-          "accessibleRequired"  => "true",
-          "takeMeThere" => "Get Public transit directions"
-          }
+  def goroo_search_form
+    goroo = agent.get("http://goroo.com/goroo/index.htm")
+    form = goroo.form('tripPlan')
   end
+  
+  def goroo_interim_results
+    goroo_search_form.origAddress = startpoint.location
+    goroo_search_form.destAddress = endpoint.location
+    results = agent.submit(goroo_search_form, goroo_search_form.buttons.first)
+  end
+  
+  def goroo_results
+    form = goroo_interim_results.form('tripPlan')
+     results = agent.submit(form, form.buttons.first)
+  end
+  
   
 
 private 
